@@ -278,11 +278,11 @@ func (out *OutputFileManager) TarImage() error {
 			return nil
 		}
 		fr, err := os.Open(fileName)
-		defer fr.Close()
 		if err != nil {
 			fmt.Println(err)
 			return err
 		}
+		defer fr.Close()
 		_, err = io.Copy(tw, fr)
 		if err != nil {
 			fmt.Println(err)
