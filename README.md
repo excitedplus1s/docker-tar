@@ -161,7 +161,7 @@ Output File:  nginx.tar
 | 请求阶段 | 支持的 ContentType | 其他 |
 | ----- | ----- | ----- |
 | 获取Token | 只处理响应体，忽略类型 | Access Token:Bearer,用户名密码(如需要）: Basic|
-| 获取所有架构镜像清单索引 | application/vnd.oci.image.index.v1+json | 响应非此类型会直接终止 |
+| 获取所有架构镜像清单索引 | application/vnd.oci.image.index.v1+json<br>application/vnd.docker.distribution.manifest.v2+json | 响应非此类型会直接终止 |
 | 获取指定架构的镜像清单 | application/vnd.oci.image.manifest.v1+json | 兼容类型也可 |
 | 获取镜像配置 | application/vnd.oci.image.config.v1+json | 兼容类型也可 |
 | 下载Layer | application/vnd.oci.image.layer.v1.tar<br>application/vnd.oci.image.layer.v1.tar+gzip<br>application/vnd.oci.image.layer.v1.tar+zstd<br>application/vnd.oci.image.layer.nondistributable.v1.tar<br>application/vnd.oci.image.layer.nondistributable.v1.tar+gzip<br>application/vnd.oci.image.layer.nondistributable.v1.tar+zstd<br>application/vnd.docker.image.rootfs.diff.tar<br>application/vnd.docker.image.rootfs.diff.tar.gzip<br>application/vnd.docker.image.rootfs.diff.tar.zstd | 加密镜像不支持 |
