@@ -48,6 +48,16 @@ func (index *ImageIndexFetcher) InitializeCheck() {
 	panic("ImageIndexFetcher not init")
 }
 
+func (index *ImageIndexFetcher) isSupportedIndexType(mt string) bool {
+	const MediaTypeDockerSchema2ManifestList = "application/vnd.docker.distribution.manifest.list.v2+json"
+	switch mt {
+	case v1.MediaTypeImageIndex, MediaTypeDockerSchema2ManifestList:
+		return true
+	default:
+		return false
+	}
+}
+
 func (index *ImageIndexFetcher) Run() error {
 	client := index.httpClientCreate()
 	requestInfo := index.requestInfo
@@ -81,7 +91,7 @@ func (index *ImageIndexFetcher) Run() error {
 		return err
 	}
 	respContentTpye := resp.Header.Get(HeaderContentType)
-	if respContentTpye != v1.MediaTypeImageIndex {
+	if !index.isSupportedIndexType(v1index.MediaType) {
 		return fmt.Errorf("%s is not support now,please let me know", string(respContentTpye))
 	}
 	for _, manifest := range v1index.Manifests {
