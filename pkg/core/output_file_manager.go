@@ -193,19 +193,19 @@ func (out *OutputFileManager) LayerFileNameByV1Id(v1id string) (string, error) {
 }
 
 func (out *OutputFileManager) LayerFileNameByBlobSum(blobsum string) (string, error) {
-	v1id, ok := out.imageGenerateContent.V1ID(blobsum)
-	if !ok {
+	v1ids, ok := out.imageGenerateContent.GetV1IDsByBlobSum(blobsum)
+	if !ok || len(v1ids) == 0 {
 		return "<nil>", fmt.Errorf("%s v1id info not found", blobsum)
 	}
-	return out.LayerFileNameByV1Id(v1id)
+	return out.LayerFileNameByV1Id(v1ids[0])
 }
 
 func (out *OutputFileManager) LayerFDByBlobSum(blobsum string) (*os.File, error) {
-	v1id, ok := out.imageGenerateContent.V1ID(blobsum)
-	if !ok {
+	v1ids, ok := out.imageGenerateContent.GetV1IDsByBlobSum(blobsum)
+	if !ok || len(v1ids) == 0 {
 		return nil, fmt.Errorf("%s v1id info not found", blobsum)
 	}
-	return out.LayerFDByV1Id(v1id)
+	return out.LayerFDByV1Id(v1ids[0])
 }
 
 func (out *OutputFileManager) ApplyConfig(config *cli.Config) error {
@@ -260,12 +260,14 @@ func (out *OutputFileManager) TarImage() error {
 		if err != nil {
 			return err
 		}
-		hdr, err := tar.FileInfoHeader(fi, "")
+		srcInfo, _ := os.Readlink(fileName)
+		srcInfo = strings.ReplaceAll(srcInfo, string(filepath.Separator), "/")
+		hdr, err := tar.FileInfoHeader(fi, srcInfo)
 		if err != nil {
 			return err
 		}
 		_, hdrName, ok := strings.Cut(strings.TrimPrefix(fileName, string(filepath.Separator)), string(filepath.Separator))
-		hdrName = strings.Replace(hdrName, string(filepath.Separator), "/", -1)
+		hdrName = strings.ReplaceAll(hdrName, string(filepath.Separator), "/")
 		if !ok {
 			return nil
 		}

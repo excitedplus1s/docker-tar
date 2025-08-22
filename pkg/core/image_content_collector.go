@@ -2,6 +2,10 @@ package core
 
 import (
 	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	moby "github.com/excitedplus1s/spec-go/moby"
@@ -10,11 +14,12 @@ import (
 )
 
 type ImageContentCollector struct {
-	manifestJson     []byte
-	repositoriesJson []byte
-	blobSumV1        map[string]string
-	v1Jsons          map[string][]byte
-	v1IDs            []string
+	manifestJson       []byte
+	repositoriesJson   []byte
+	blobSumV1          map[string][]string
+	emptyLayerBlobSums []string
+	v1Jsons            map[string][]byte
+	v1IDs              []string
 
 	imageInfo       *ImageInfoManager
 	imageConfig     *ImageConfigFetcher
@@ -44,7 +49,7 @@ func (gen *ImageContentCollector) Initialize(entry *EntryPoint) {
 	gen.imageConfigBlob = entry.ImageConfigBlobFetcher
 	gen.outputFileInfo = entry.OutputFileManager
 	gen.v1Jsons = map[string][]byte{}
-	gen.blobSumV1 = map[string]string{}
+	gen.blobSumV1 = map[string][]string{}
 	gen.initialized = true
 }
 
@@ -91,7 +96,11 @@ func (gen *ImageContentCollector) Run() error {
 		parent = v1ID
 		v1IDs[index] = v1ID
 		gen.v1IDs = append(gen.v1IDs, v1ID.Encoded())
-		gen.blobSumV1[blobDigests[index].Encoded()] = v1ID.Encoded()
+		blobList := gen.blobSumV1[blobDigests[index].Encoded()]
+		if len(blobList) > 0 {
+			gen.emptyLayerBlobSums = append(gen.emptyLayerBlobSums, blobDigests[index].Encoded())
+		}
+		gen.blobSumV1[blobDigests[index].Encoded()] = append(blobList, v1ID.Encoded())
 	}
 	type Summary struct {
 		Config   string   `json:"Config"`
@@ -121,7 +130,7 @@ func (gen *ImageContentCollector) Run() error {
 	if err != nil {
 		return err
 	}
-	gen.manifestJson = manifestJson
+	gen.manifestJson = append(manifestJson, '\n')
 
 	versionMap := map[string]string{
 		imageInfo.Tag(): v1IDs[len(v1IDs)-1].Encoded(),
@@ -133,7 +142,7 @@ func (gen *ImageContentCollector) Run() error {
 	if err != nil {
 		return err
 	}
-	gen.repositoriesJson = repositoriesJson
+	gen.repositoriesJson = append(repositoriesJson, '\n')
 	return nil
 }
 
@@ -176,10 +185,34 @@ func (gen *ImageContentCollector) WriteToFile() error {
 			return err
 		}
 	}
+	for _, emptyLayerBlobSum := range gen.emptyLayerBlobSums {
+		sum, _ := gen.GetV1IDsByBlobSum(emptyLayerBlobSum)
+		srcFile, err := gen.outputFileInfo.LayerFileNameByV1Id(sum[0])
+		if err != nil {
+			return err
+		}
+		_, srcFile, ok := strings.Cut(srcFile, string(filepath.Separator))
+		if !ok {
+			return fmt.Errorf("dest file invaild")
+		}
+		srcFile = filepath.Join("..", srcFile)
+		destSums := sum[1:]
+		for _, destSum := range destSums {
+			dstFile, err := gen.outputFileInfo.LayerFileNameByV1Id(destSum)
+			if err != nil {
+				return err
+			}
+			err = os.Symlink(srcFile, dstFile)
+			if err != nil {
+				return err
+			}
+		}
+
+	}
 	return nil
 }
 
-func (gen *ImageContentCollector) V1ID(blobSum string) (string, bool) {
+func (gen *ImageContentCollector) GetV1IDsByBlobSum(blobSum string) ([]string, bool) {
 	sum, ok := gen.blobSumV1[blobSum]
 	return sum, ok
 }
