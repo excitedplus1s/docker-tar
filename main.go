@@ -2,11 +2,19 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
 	cli "github.com/excitedplus1s/docker-tar/pkg/cli"
 	core "github.com/excitedplus1s/docker-tar/pkg/core"
+)
+
+var (
+	version = "unknown"
+	commit  = "none"
+	date    = "unknown"
 )
 
 func main() {
@@ -41,7 +49,16 @@ func main() {
 	flag.StringVar(&output, "output", "", "The `filename` where the tar image is stored.")
 	var dnsTimeout int
 	flag.IntVar(&dnsTimeout, "dns-timeout", 2, "This configuration takes effect when the experiment feature is on.")
+	var showVersion bool
+	flag.BoolVar(&showVersion, "version", false, "Show version")
 	flag.Parse()
+	if showVersion {
+		fmt.Printf(`Build: %s-%s-%s
+Repo: https://github.com/excitedplus1s/docker-tar
+Compiler Version: %s
+		`, version, commit, date, runtime.Version())
+		os.Exit(0)
+	}
 	if len(os.Args) < 5 {
 		flag.PrintDefaults()
 	}
