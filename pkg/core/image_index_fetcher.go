@@ -90,10 +90,6 @@ func (index *ImageIndexFetcher) Run() error {
 	if err != nil {
 		return err
 	}
-	respContentTpye := resp.Header.Get(HeaderContentType)
-	if !index.isSupportedIndexType(v1index.MediaType) {
-		return fmt.Errorf("%s is not support now,please let me know", string(respContentTpye))
-	}
 	for _, manifest := range v1index.Manifests {
 		if manifest.Platform.OS == "linux" {
 			arch := manifest.Platform.Architecture
@@ -103,6 +99,25 @@ func (index *ImageIndexFetcher) Run() error {
 		}
 	}
 	if len(index.architectureIndex) == 0 {
+		//index fetch can be skip,we should check it
+		var manifest v1.Manifest
+		err = json.Unmarshal(body, &manifest)
+		if err != nil {
+			return err
+		}
+
+		if manifest.Annotations != nil {
+			const dockerArch = "com.docker.official-images.bashbrew.arch"
+			arch, ok := manifest.Annotations[dockerArch]
+			if ok {
+				index.architectureIndex[arch] = digest.Digest("")
+				return nil
+			}
+		}
+		respContentType := resp.Header.Get(HeaderContentType)
+		if !index.isSupportedIndexType(v1index.MediaType) {
+			return fmt.Errorf("%s is not support now,please let me know", string(respContentType))
+		}
 		return fmt.Errorf("no platform found in %s", string(body))
 	}
 	return nil
@@ -118,7 +133,13 @@ func (index *ImageIndexFetcher) AvailableArch() []string {
 	return result
 }
 
-func (index *ImageIndexFetcher) SelectDigestByArchitecture(arch string) (digest.Digest, bool) {
+func (index *ImageIndexFetcher) SelectDigestByArchitecture(arch string) (string, bool) {
 	dig, ok := index.architectureIndex[arch]
-	return dig, ok
+	if ok {
+		if dig == "" {
+			requestInfo := index.requestInfo
+			return requestInfo.Tag(), ok
+		}
+	}
+	return dig.Encoded(), ok
 }
