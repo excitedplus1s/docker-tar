@@ -1,3 +1,10 @@
+> [!NOTE]
+> 本程序lab模式使用的用于绕过 SNI 阻断的方法已经能够被 GFW 识别，该方法已经失效。
+> 
+> 用于解决 DNS 污染的方法依然可用，但只解决 DNS 污染并无法达到直连下载的效果。
+
+>  [!IMPORTANT]
+> 本程序 lab 模式出于研究学习目的，无意与 GFW 对抗，未来不会更新已经失效的方法和 lab 模式相关的内容。
 <h1 align="center">docker-tar</h1>
 
 [English](./README.EN.md) | 简体中文
@@ -14,7 +21,7 @@ docker-tar 是一个用于从 Docker 仓库拉取镜像并自动打包为 Tar �
 - **登录下载**：支持需要认证的 Docker 仓库及其镜像站
 - **选择镜像架构**：支持选择下载具有多架构的 Docker 镜像
 - **更接近 Docker CLI 的下载结果**：此工具下载的 tar 镜像文件，与使用 `docker pull`和`docker save`保存的文件完全一致
-- **实验室模式**：提供解决 DNS 污染和 SNI 阻断的实验室模式，帮助你直连某些无法访问的 Docker 仓库站点
+- ~~**实验室模式**：提供解决 DNS 污染和 SNI 阻断的实验室模式，帮助你直连某些无法访问的 Docker 仓库站点（已失效）~~
 
 
 ## 命令行使用说明
@@ -165,3 +172,4 @@ Output File:  nginx.tar
 | 获取指定架构的镜像清单 | application/vnd.oci.image.manifest.v1+json | 兼容类型也可 |
 | 获取镜像配置 | application/vnd.oci.image.config.v1+json | 兼容类型也可 |
 | 下载Layer | application/vnd.oci.image.layer.v1.tar<br>application/vnd.oci.image.layer.v1.tar+gzip<br>application/vnd.oci.image.layer.v1.tar+zstd<br>application/vnd.oci.image.layer.nondistributable.v1.tar<br>application/vnd.oci.image.layer.nondistributable.v1.tar+gzip<br>application/vnd.oci.image.layer.nondistributable.v1.tar+zstd<br>application/vnd.docker.image.rootfs.diff.tar<br>application/vnd.docker.image.rootfs.diff.tar.gzip<br>application/vnd.docker.image.rootfs.diff.tar.zstd | 加密镜像不支持 |
+
