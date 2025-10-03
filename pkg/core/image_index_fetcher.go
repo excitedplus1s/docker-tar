@@ -141,5 +141,5 @@ func (index *ImageIndexFetcher) SelectDigestByArchitecture(arch string) (string,
 			return requestInfo.Tag(), ok
 		}
 	}
-	return dig.Encoded(), ok
+	return dig.String(), ok
 }
